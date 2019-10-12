@@ -28,6 +28,10 @@ function sleep(ms) {
   })
 }
 
+function firstDayOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
 module.exports.loadWholePage = loadWholePage;
 module.exports.randomNumber = randomNumber;
 module.exports.sleep = sleep;

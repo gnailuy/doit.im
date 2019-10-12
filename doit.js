@@ -10,9 +10,9 @@ const argv = require('yargs').option('debug', {
 }).option('start', {
   alias: 's',
   default: '2014-01-01'
-}).option('end', {
-  alias: 'e',
-  default: '2019-12-01'
+}).option('output', {
+  alias: 'o',
+  default: './output'
 }).option('username', {
   alias: 'u',
   default: 'username@example.com'
@@ -21,27 +21,65 @@ const argv = require('yargs').option('debug', {
   default: 'password'
 }).argv
 
+const fs = require('fs')
 const puppeteer = require('puppeteer');
+const moment = require('moment');
 
 const login = require('./login');
 const review = require('./review');
 const task = require('./task');
 const utils = require('./utils');
 
-async function saveTasks(page, start, end) {
+async function saveTasks(page, startDate, endDate) {
+  var taskList = [];
+  var taskDetailList = [];
+
   // Foreach month between start and end
-  // Get task list of that month
-  // Foreach task
-  // Save the task details
-  // Loop over tasks in one page
+  page = await task.loadTaskListPage(page, endDate.getTime());
+  for (var d = new Date(endDate); d >= startDate; d.setMonth(d.getMonth() - 1)) {
+    console.log('Crawling tasks of month: ' + moment(d).format('YYYYMM'));
+    var monthList = await task.crawlTaskList(page);
+    taskList.push(...monthList);
+
+    await utils.sleep(utils.randomNumber(1000, 2000));
+    await task.goToPreviousMonth(page);
+  }
+
+  try {
+    var logger = fs.createWriteStream(argv.output + '.tasks.json', {
+      flags: 'a' // appending
+    })
+
+    for (i in taskList) {
+      var t = taskList[i];
+      console.log('Crawling task: ' + t['id']);
+
+      var taskDetail = await task.crawlTask(page, t);
+      taskDetailList.push(taskDetail);
+      logger.write(JSON.stringify(taskDetail, null, 0) + '\n');
+
+      await utils.sleep(utils.randomNumber(1000, 2000));
+    }
+  } finally {
+    logger.end();
+  }
+
+  return taskDetailList;
 }
 
-async function saveReviews(page, start, end) {
+async function saveReviews(page, startDate, endDate) {
+  var reviews = [];
+
   // Foreach day between start and end
-  // Save the daily review of the day
+  for (var d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    console.log(moment(d).format('YYYYMMDD'));
+    // Save the daily review of the day
+  }
+
+  return reviews;
 }
 
-async function run() {
+async function run(startDate, endDate) {
   // Open browser and set window size
   const browser = await puppeteer.launch({
     headless: !argv.debug,
@@ -60,11 +98,13 @@ async function run() {
   // Crawl and save data
   try {
     if (argv.task) {
-      var tasks = await saveTasks(page, argv.start, argv.end);
+      console.log('Crawling tasks ...');
+      var tasks = await saveTasks(page, startDate, endDate);
       console.log('Tasks finished: ' + tasks.length);
     }
     if (argv.review) {
-      var reviews = await saveReviews(page, argv.start, argv.end);
+      console.log('Crawling reviews ...');
+      var reviews = await saveReviews(page, startDate, endDate);
       console.log('Reviews finished: ' + reviews.length);
     }
     console.log('All done.');
@@ -76,7 +116,9 @@ async function run() {
   }
 }
 
-run().catch((e) => {
+// From start date to today; doit.im uses Beijing time
+run(new Date(Date.parse(argv.start + 'T00:00:00+08:00')),
+    new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'))).catch((e) => {
   console.log(e);
   process.exit(-1);
 });
