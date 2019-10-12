@@ -1,12 +1,4 @@
-import { launch } from 'puppeteer';
-import { option } from 'yargs';
-
-import { crawl_task_list, crawl_task } from './task';
-import { crawl_review } from './review';
-
-import { sleep, randomNumber } from './utils';
-
-const argv = option('debug', {
+const argv = require('yargs').option('debug', {
   alias: 'd',
   default: false
 }).option('task', {
@@ -21,41 +13,27 @@ const argv = option('debug', {
 }).option('end', {
   alias: 'e',
   default: '2019-12-01'
+}).option('username', {
+  alias: 'u',
+  default: 'username@example.com'
+}).option('password', {
+  alias: 'p',
+  default: 'password'
 }).argv
+
+const puppeteer = require('puppeteer');
+
+const login = require('./login');
+const review = require('./review');
+const task = require('./task');
+const utils = require('./utils');
 
 async function saveTasks(page, start, end) {
   // Foreach month between start and end
   // Get task list of that month
   // Foreach task
   // Save the task details
-  var items = await crawl_task_list(page, month);
-  if (argv.debug) {
-    console.log(JSON.stringify(items, null, 4));
-  }
-  console.log('Loaded task list for ' + month + ', totally ' + items.length + ' tasks to scrape');
-
   // Loop over tasks in one page
-  for (let i = 0; i < items.length; i++) {
-    try {
-      var exchangeURL = items[i]['href'];
-      var d = await ___run(page, exchangeURL, 'exchange');
-      items[i]['details'] = d;
-
-      // Insert to mongo
-      upsertItem(items[i], exchangeSchema);
-
-      if (argv.debug) {
-        console.log(JSON.stringify(items[i], null, 4));
-      }
-      console.log('Inserted: ' + items[i].name + ' @ ' + items[i].href);
-    } catch (e) {
-      console.log(e);
-      console.log('Error: ' + items[i].name + ' @ ' + items[i].href);
-    }
-    await sleep(randomNumber(1000, 2000));
-  }
-
-  return items;
 }
 
 async function saveReviews(page, start, end) {
@@ -65,7 +43,7 @@ async function saveReviews(page, start, end) {
 
 async function run() {
   // Open browser and set window size
-  const browser = await launch({
+  const browser = await puppeteer.launch({
     headless: !argv.debug,
     ignoreHTTPSErrors: true // doit.im certification is expired
   });
@@ -76,6 +54,11 @@ async function run() {
     height: 800
   });
 
+  // Login
+  await login.login(page, argv.username, argv.password)
+  await sleep(randomNumber(1000, 2000));
+
+  // Crawl and save data
   try {
     if (argv.task) {
       var tasks = await saveTasks(page, argv.start, argv.end);

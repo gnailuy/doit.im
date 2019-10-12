@@ -28,6 +28,6 @@ function sleep(ms) {
   })
 }
 
-export { loadWholePage };
-export { randomNumber };
-export { sleep };
+module.exports.loadWholePage = loadWholePage;
+module.exports.randomNumber = randomNumber;
+module.exports.sleep = sleep;
