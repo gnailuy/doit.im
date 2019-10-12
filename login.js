@@ -9,17 +9,13 @@ async function login(page, user, pass) {
     waitUntil: 'load'
   });
 
-  // Fill user and pass, click remember me, then submit
+  // Fill user and pass, click remember me
   await page.$eval('input[name=username]', (el, value) => el.value = value, user);
   await page.$eval('input[name=password]', (el, value) => el.value = value, pass);
+  await page.click('input[name="autologin"]');
 
-  const checkbox = await page.$('input[name="autologin"]');
-  await checkbox.click();
-
-  const submit = await page.$('input[type="submit"]');
-  await submit.click();
-
-  // Wait for redirection
+  // Click submit and wait for redirection
+  await page.click('div[class="submit_btn_box"]');
   await page.waitForNavigation({
     'waitUntil': 'load'
   });

@@ -56,7 +56,6 @@ async function run() {
 
   // Login
   await login.login(page, argv.username, argv.password)
-  await sleep(randomNumber(1000, 2000));
 
   // Crawl and save data
   try {
