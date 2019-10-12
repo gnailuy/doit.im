@@ -18,6 +18,7 @@
   "author": "gnailuy",
   "license": "ISC",
   "dependencies": {
+    "moment": "^2.24.0",
     "puppeteer": "^1.20.0",
     "yargs": "^14.2.0"
   }
