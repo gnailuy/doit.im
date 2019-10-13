@@ -55,8 +55,12 @@ async function saveTasks(page, startDate, endDate) {
       console.log('Crawling task: ' + t['id']);
 
       var taskDetail = await task.crawlTask(page, t);
-      taskDetailList.push(taskDetail);
-      logger.write(JSON.stringify(taskDetail, null, 0) + '\n');
+      if (taskDetail != null) {
+        taskDetailList.push(taskDetail);
+        logger.write(JSON.stringify(taskDetail, null, 0) + '\n');
+      } else {
+        console.log('Task ' + t['id'] + ' is of unknown type');
+      }
 
       await utils.sleep(utils.randomNumber(1000, 2000));
     }

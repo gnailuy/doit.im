@@ -46,27 +46,151 @@ async function crawlTaskList(page) {
   });``
 }
 
+async function taskPageType(page) {
+  const goalSelector = '#goal_info';
+  const projectSelector = '#project_info';
+  if (await page.$(goalSelector) === null && await page.$(pageSelector) === null) {
+    return 'task';
+  }
+
+  var goalClass = await page.$(goalSelector);
+  var projectClass = await page.$(projectSelector);
+  if (goalClass.indexOf('hide') === -1) {
+    return 'goal';
+  } else if (projectClass.indexOf('hide') === -1) {
+    return 'project';
+  }
+
+  return null;
+}
+
 async function loadTaskPage(page, taskItem) {
   // Open page
   await page.goto(taskItem['href'], {
     waitUntil: 'load'
   });
 
+  // Wait for the page to fully load
+  const taskNoteSelector = 'div.task-view.ng-scope > ul > li.note > div';
+  const goalNoteSelector = '#goal_info > ul > li.note > span';
+  const projectNoteSelector = '#project_info > ul > li.note > span';
+
+  var pageType = taskPageType(page);
+  switch(pageType) {
+    case 'task':
+      await page.waitForSelector(taskNoteSelector, {
+        visible: true
+      });
+      break;
+    case 'goal':
+      await page.waitForSelector(goalNoteSelector, {
+        visible: true
+      });
+      break;
+    case 'project':
+      await page.waitForSelector(projectNoteSelector, {
+        visible: true
+      });
+      break;
+    default:
+      throw 'Unexpected page type ' + pageType;
+  }
+
   return page;
 }
 
-async function crawlTaskPage(page, taskItem) {
-  // Scrape the task details
-  return await page.evaluate((item) => {
-    // TODO: more selector and more data
-    const taskSelector = 'a.link-title.ng-binding';
+function evaluateTaskPage(item) {
+  const titleSelector = 'div.task-view.ng-scope > h3 > span.title.ng-binding';
+  const noteSelector = 'div.task-view.ng-scope > ul > li.note > div';
+  const subtasksSelector = 'div.task-view.ng-scope > ul > li.subtasks.ng-scope > div.inner > ul > li'
+  const prioritySelector = 'div.task-view.ng-scope > div > div.item.pri';
+  const timeSelector = 'div.task-view.ng-scope > div > div.item.time.ng-binding';
+  const contextSelector = 'div.task-view.ng-scope > div > div.item.context.ng-binding';
+  const goalSelector = 'div.task-view.ng-scope > div > div.item.goal.ng-binding';
+  const projectSelector = 'div.task-view.ng-scope > div > div.item.project.ng-binding';
+  const tagsSelector = 'div.task-view.ng-scope > div > div.item.tags > span';
+  const commentsSelector = 'div.task-view.ng-scope > ul > li.comments.animate-list.ng-scope > div.con > ul > li';
+  const estimateHourSelector = '#task_paper > div.task-estimate.ng-scope > div.estimate > div.time-wrap > input.h';
+  const estimateMinuteSelector = '#task_paper > div.task-estimate.ng-scope > div.estimate > div.time-wrap > input.m';
+  const spentHourSelector = '#task_paper > div.task-estimate.ng-scope > div.spent > div.time-wrap > input.h'
+  const spentMinuteSelector = '#task_paper > div.task-estimate.ng-scope > div.spent > div.time-wrap > input.m'
 
+  const subtaskTitleSelector = 'div.title > span';
+  var subtaskElements = [...document.querySelectorAll(subtasksSelector)];
+  var subtasks = subtaskElements.map(el => {
+    return el.querySelector(subtaskTitleSelector);
+  });
+
+  const commentAuthorSelector = 'div.comment-body > div.comment-header > span.comment-author.ng-binding';
+  const commentTimeSelector = 'div.comment-body > div.comment-header > span.comment-time.ng-binding';
+  const commentContentSelector = 'div.comment-body > div.comment-content.ng-binding';
+  var commentElements = [...document.querySelectorAll(commentsSelector)];
+  var comments = commentElements.map(el => {
     return {
-      title: item['title'],
-      href: item['href'],
-      id: item['id'],
+      author: el.querySelector(commentAuthorSelector).innerText,
+      time: el.querySelector(commentTimeSelector).innerText,
+      content: el.querySelector(commentContentSelector).innerText,
     };
-  }, taskItem);``
+  });
+
+  return {
+    type: 'task',
+    href: item['href'],
+    id: item['id'],
+    title: item['title'],
+    title_in: document.querySelector(titleSelector).innerText,
+    note: document.querySelector(noteSelector).innerHTML,
+    subtasks: subtasks,
+    priority: document.querySelector(prioritySelector).getAttribute('class'),
+    scheduleTime: document.querySelector(timeSelector).innerText,
+    time: document.querySelector(timeSelector).getAttribute('title'),
+    context: document.querySelector(contextSelector).innerText,
+    goal: document.querySelector(goalSelector).innerText,
+    project: document.querySelector(projectSelector).innerText,
+    tags: [...document.querySelectorAll(tagsSelector)].map(el => el.innerText),
+    estimateTime: {
+      hour: document.querySelector(estimateHourSelector).getAttribute('value'),
+      minute: document.querySelector(estimateMinuteSelector).getAttribute('value'),
+    },
+    spentTime: {
+      hour: document.querySelector(spentHourSelector).getAttribute('value'),
+      minute: document.querySelector(spentMinuteSelector).getAttribute('value'),
+    },
+    comments: comments,
+  };
+}
+
+function evaluateGoalPage(item) {
+  return {
+    type: 'goal',
+    href: item['href'],
+    id: item['id'],
+    title: item['title'],
+    // TODO: evaluate
+  };
+}
+
+function evaluateProjectPage(item) {
+  return {
+    type: 'project',
+    href: item['href'],
+    id: item['id'],
+    title: item['title'],
+    // TODO: evaluate
+  };
+}
+
+async function crawlTaskPage(page, taskItem) {
+  var pageType = taskPageType(page);
+  if (pageType === 'task') {
+    return await page.evaluate(evaluateTaskPage, taskItem);``
+  } else if (pageType === 'goal') {
+    return await page.evaluate(evaluateGoalPage, taskItem);``
+  } else if (pageType === 'project') {
+    return await page.evaluate(evaluateProjectPage, taskItem);``
+  } else {
+    return null;
+  }
 }
 
 async function crawlTask(page, taskItem) {
