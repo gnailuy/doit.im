@@ -30,47 +30,6 @@ const review = require('./review');
 const task = require('./task');
 const utils = require('./utils');
 
-async function saveTasks(page, startDate, endDate) {
-  var taskList = [];
-  var taskDetailList = [];
-
-  // Foreach month between start and end
-  page = await task.loadTaskListPage(page, endDate.getTime());
-  for (var d = new Date(endDate); d >= startDate; d.setMonth(d.getMonth() - 1)) {
-    console.log('Crawling tasks of month: ' + moment(d).format('YYYYMM'));
-    var monthList = await task.crawlTaskList(page);
-    taskList.push(...monthList);
-
-    await utils.sleep(utils.randomNumber(1000, 2000));
-    await task.goToPreviousMonth(page);
-  }
-
-  try {
-    var logger = fs.createWriteStream(argv.output + '.tasks.json', {
-      flags: 'a' // appending
-    })
-
-    for (i in taskList) {
-      var t = taskList[i];
-      console.log('Crawling task: ' + t['id']);
-
-      var taskDetail = await task.crawlTask(page, t);
-      if (taskDetail != null) {
-        taskDetailList.push(taskDetail);
-        logger.write(JSON.stringify(taskDetail, null, 0) + '\n');
-      } else {
-        console.log('Task ' + t['id'] + ' is of unknown type');
-      }
-
-      await utils.sleep(utils.randomNumber(1000, 2000));
-    }
-  } finally {
-    logger.end();
-  }
-
-  return taskDetailList;
-}
-
 async function saveReviews(page, startDate, endDate) {
   var reviews = [];
 

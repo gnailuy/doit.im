@@ -2,9 +2,12 @@
   "name": "doit.im",
   "version": "1.0.0",
   "description": "A crawler of doit.im",
-  "main": "doit.js",
+  "main": "dist/doit.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "tsc -p ./",
+    "prestart": "npm run compile",
+    "start": "node dist/doit.js",
+    "test": "node dist/doit.js -d true"
   },
   "repository": {
     "type": "git",
@@ -18,6 +21,9 @@
   "author": "gnailuy",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^12.7.12",
+    "@types/puppeteer": "^1.20.2",
+    "@types/yargs": "^13.0.3",
     "moment": "^2.24.0",
     "puppeteer": "^1.20.0",
     "yargs": "^14.2.0"

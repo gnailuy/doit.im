@@ -7,6 +7,9 @@ yarn-error.log*
 lerna-debug.log*
 output.*.json
 
+# TypeScript
+dist/
+
 # Editors
 .vscode/
 

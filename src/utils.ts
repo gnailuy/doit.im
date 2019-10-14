@@ -1,10 +1,12 @@
+import puppeteer from 'puppeteer'
+
 // Scroll down to load the whole page
-async function loadWholePage(page) {
+export async function loadWholePage(page: puppeteer.Page): Promise<any> {
   await page.evaluate(() => {
-    return new Promise((resolve, reject) => {
-      var totalHeight = 0;
-      var distance = 600;
-      var timer = setInterval(() => {
+    return new Promise((resolve, _) => {
+      let totalHeight: number = 0;
+      let distance: number = 600;
+      let timer: NodeJS.Timeout = setInterval(() => {
         window.scrollBy(0, distance);
         totalHeight += distance;
 
@@ -18,20 +20,12 @@ async function loadWholePage(page) {
   });
 }
 
-function randomNumber(start = 0, end = 10) {
+export function randomNumber(start: number = 0, end: number = 10): number {
   return start + Math.floor(Math.random() * (end - start + 1)); // [start, end]
 }
 
-function sleep(ms) {
+export function sleep(ms: number): Promise<any> {
   return new Promise(resolve => {
     setTimeout(resolve, ms)
   })
 }
-
-function firstDayOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-module.exports.loadWholePage = loadWholePage;
-module.exports.randomNumber = randomNumber;
-module.exports.sleep = sleep;
