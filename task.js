@@ -46,19 +46,35 @@ async function crawlTaskList(page) {
   });``
 }
 
+function evaluateClassAttribute(selector) {
+  return document.querySelector(selector).getAttribute('class');
+}
+
 async function taskPageType(page) {
+  const taskNoteSelector = 'div.task-view.ng-scope > ul > li.note > div';
   const goalSelector = '#goal_info';
   const projectSelector = '#project_info';
-  if (await page.$(goalSelector) === null && await page.$(pageSelector) === null) {
-    return 'task';
-  }
 
-  var goalClass = await page.$(goalSelector);
-  var projectClass = await page.$(projectSelector);
-  if (goalClass.indexOf('hide') === -1) {
-    return 'goal';
-  } else if (projectClass.indexOf('hide') === -1) {
-    return 'project';
+  try {
+    await page.waitForSelector(taskNoteSelector, {
+      timeout: 5000
+    });
+  } catch (_) { }
+
+  var goalElement = await page.$(goalSelector);
+  var projectElement = await page.$(projectSelector);
+
+  if (goalElement === null || projectElement === null) {
+    return 'task';
+  } else {
+    var goalClass = await page.evaluate(evaluateClassAttribute, goalSelector);
+    var projectClass = await page.evaluate(evaluateClassAttribute, projectSelector);
+
+    if (goalClass.indexOf('hide') === -1) {
+      return 'goal';
+    } else if (projectClass.indexOf('hide') === -1) {
+      return 'project';
+    }
   }
 
   return null;
@@ -75,7 +91,7 @@ async function loadTaskPage(page, taskItem) {
   const goalNoteSelector = '#goal_info > ul > li.note > span';
   const projectNoteSelector = '#project_info > ul > li.note > span';
 
-  var pageType = taskPageType(page);
+  var pageType = await taskPageType(page);
   switch(pageType) {
     case 'task':
       await page.waitForSelector(taskNoteSelector, {
@@ -181,13 +197,13 @@ function evaluateProjectPage(item) {
 }
 
 async function crawlTaskPage(page, taskItem) {
-  var pageType = taskPageType(page);
+  var pageType = await taskPageType(page);
   if (pageType === 'task') {
-    return await page.evaluate(evaluateTaskPage, taskItem);``
+    return await page.evaluate(evaluateTaskPage, taskItem);
   } else if (pageType === 'goal') {
-    return await page.evaluate(evaluateGoalPage, taskItem);``
+    return await page.evaluate(evaluateGoalPage, taskItem);
   } else if (pageType === 'project') {
-    return await page.evaluate(evaluateProjectPage, taskItem);``
+    return await page.evaluate(evaluateProjectPage, taskItem);
   } else {
     return null;
   }
