@@ -26,6 +26,7 @@
     "@types/yargs": "^13.0.3",
     "moment": "^2.24.0",
     "puppeteer": "^1.20.0",
+    "typescript": "^3.6.4",
     "yargs": "^14.2.0"
   }
 }

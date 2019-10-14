@@ -28,56 +28,70 @@ import puppeteer from 'puppeteer';
 import moment from 'moment';
 
 import login from './login';
-// import review from './review';
-import task from './task';
-// import utils from './utils';
+import * as review from './review';
+import * as task from './task';
+import * as utils from './utils';
 
-async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date) {
-  let taskList: Array<object> = [];
-  let taskDetailList: Array<object> = [];
+async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
+  let taskList: Array<any> = [];
+  let taskDetailList: Array<any> = [];
 
   // Foreach month between start and end
   page = await task.loadTaskListPage(page, endDate.getTime());
-  for (var d = new Date(endDate); d >= startDate; d.setMonth(d.getMonth() - 1)) {
+  for (let d: Date = new Date(endDate); d >= startDate; d.setMonth(d.getMonth() - 1)) {
     console.log('Crawling tasks of month: ' + moment(d).format('YYYYMM'));
-    var monthList = await task.crawlTaskList(page);
+    let monthList: Array<any> = await task.crawlTaskList(page);
     taskList.push(...monthList);
 
     await utils.sleep(utils.randomNumber(1000, 2000));
     await task.goToPreviousMonth(page);
   }
 
+  let logger: fs.WriteStream | undefined = undefined;
   try {
-    var logger = fs.createWriteStream(argv.output + '.tasks.json', {
+    logger = fs.createWriteStream(argv.output + '.tasks.json', {
       flags: 'a' // appending
     })
 
-    for (i in taskList) {
-      var t = taskList[i];
-      console.log('Crawling task: ' + t['id']);
+    for (let t of taskList) {
+      console.log('Crawling task: ' + t.id);
 
-      var taskDetail = await task.crawlTask(page, t);
-      if (taskDetail != null) {
+      let taskDetail: any = await task.crawlTask(page, t);
+      if (taskDetail !== null) {
         taskDetailList.push(taskDetail);
         logger.write(JSON.stringify(taskDetail, null, 0) + '\n');
       } else {
-        console.log('Task ' + t['id'] + ' is of unknown type');
+        console.log('Task ' + t.id + ' is of unknown type');
       }
 
       await utils.sleep(utils.randomNumber(1000, 2000));
     }
   } finally {
-    logger.end();
+    if (logger) {
+      logger.end();
+    }
   }
 
   return taskDetailList;
 }
 
-async function run(startDate: Date, endDate: Date) {
+async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
+  let reviews: Array<any> = [];
+
+  // Foreach day between start and end
+  for (let d: Date = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    console.log(moment(d).format('YYYYMMDD'));
+    // Save the daily review of the day
+  }
+
+  return reviews;
+}
+
+async function run(startDate: Date, endDate: Date): Promise<any> {
   // Open browser and set window size
   const browser = await puppeteer.launch({
     headless: !argv.debug,
-    ignoreHTTPSErrors: true // doit.im certification is expired
+    // ignoreHTTPSErrors: true,
   });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(120000);
@@ -93,13 +107,13 @@ async function run(startDate: Date, endDate: Date) {
   try {
     if (argv.task) {
       console.log('Crawling tasks ...');
-      // var tasks = await saveTasks(page, startDate, endDate);
-      // console.log('Tasks finished: ' + tasks.length);
+      let tasks: Array<any> = await saveTasks(page, startDate, endDate);
+      console.log('Tasks finished: ' + tasks.length);
     }
     if (argv.review) {
       console.log('Crawling reviews ...');
-      // var reviews = await saveReviews(page, startDate, endDate);
-      // console.log('Reviews finished: ' + reviews.length);
+      let reviews: Array<any> = await saveReviews(page, startDate, endDate);
+      console.log('Reviews finished: ' + reviews.length);
     }
     console.log('All done.');
   } catch (e) {
