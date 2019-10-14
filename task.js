@@ -46,73 +46,17 @@ async function crawlTaskList(page) {
   });``
 }
 
-function evaluateClassAttribute(selector) {
-  return document.querySelector(selector).getAttribute('class');
-}
-
-async function taskPageType(page) {
-  const taskNoteSelector = 'div.task-view.ng-scope > ul > li.note > div';
-  const goalSelector = '#goal_info';
-  const projectSelector = '#project_info';
-
-  try {
-    await page.waitForSelector(taskNoteSelector, {
-      timeout: 5000
-    });
-  } catch (_) { }
-
-  var goalElement = await page.$(goalSelector);
-  var projectElement = await page.$(projectSelector);
-
-  if (goalElement === null || projectElement === null) {
-    return 'task';
-  } else {
-    var goalClass = await page.evaluate(evaluateClassAttribute, goalSelector);
-    var projectClass = await page.evaluate(evaluateClassAttribute, projectSelector);
-
-    if (goalClass.indexOf('hide') === -1) {
-      return 'goal';
-    } else if (projectClass.indexOf('hide') === -1) {
-      return 'project';
-    }
-  }
-
-  return null;
-}
-
 async function loadTaskPage(page, taskItem) {
   // Open page
   await page.goto(taskItem['href'], {
     waitUntil: 'load'
   });
 
-  // Wait for the page to fully load
-  const taskNoteSelector = 'div.task-view.ng-scope > ul > li.note > div';
-  const goalNoteSelector = '#goal_info > ul > li.note > span';
-  const projectNoteSelector = '#project_info > ul > li.note > span';
-
-  var pageType = await taskPageType(page);
-  switch(pageType) {
-    case 'task':
-      await page.waitForSelector(taskNoteSelector, {
-        visible: true
-      });
-      break;
-    case 'goal':
-      await page.waitForSelector(goalNoteSelector, {
-        visible: true
-      });
-      break;
-    case 'project':
-      await page.waitForSelector(projectNoteSelector, {
-        visible: true
-      });
-      break;
-    default:
-      throw 'Unexpected page type ' + pageType;
-  }
-
   return page;
+}
+
+function evaluateClassAttribute(selector) {
+  return document.querySelector(selector).getAttribute('class');
 }
 
 function evaluateTaskPage(item) {
@@ -194,6 +138,38 @@ function evaluateProjectPage(item) {
     title: item['title'],
     // TODO: evaluate
   };
+}
+
+async function taskPageType(page) {
+  const taskNoteSelector = 'div.task-view.ng-scope > ul > li.note > div';
+  const goalSelector = '#goal_info';
+  const projectSelector = '#project_info';
+
+  try {
+    // Wait for the task note element to load
+    // For goal/poject, wait timeout
+    await page.waitForSelector(taskNoteSelector, {
+      timeout: 5000
+    });
+  } catch (_) { }
+
+  var goalElement = await page.$(goalSelector);
+  var projectElement = await page.$(projectSelector);
+
+  if (goalElement === null || projectElement === null) {
+    return 'task';
+  } else {
+    var goalClass = await page.evaluate(evaluateClassAttribute, goalSelector);
+    var projectClass = await page.evaluate(evaluateClassAttribute, projectSelector);
+
+    if (goalClass.indexOf('hide') === -1) {
+      return 'goal';
+    } else if (projectClass.indexOf('hide') === -1) {
+      return 'project';
+    }
+  }
+
+  return null;
 }
 
 async function crawlTaskPage(page, taskItem) {
