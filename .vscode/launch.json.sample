@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/src/doit.ts",
-            "preLaunchTask": "tsc: build - tsconfig.json",
+            "preLaunchTask": "npm: compile",
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "args": [
                 "-d",
