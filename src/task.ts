@@ -58,8 +58,12 @@ async function loadTaskPage(page: puppeteer.Page, taskItem: any): Promise<puppet
   return page;
 }
 
+function evaluateTextNonEmpty(selector: string): boolean {
+  return (document.querySelector(selector) as HTMLElement).innerText.length > 0;
+}
+
 function evaluateClassAttribute(selector: string): string {
-  return document.querySelector(selector)!.getAttribute('class')!;
+  return (document.querySelector(selector) as HTMLElement).getAttribute('class')!;
 }
 
 function evaluateTaskPage(item: any): any {
@@ -135,7 +139,7 @@ function evaluateGoalPage(item: any): any {
 
 function evaluateProjectPage(item: any): any {
   return {
-    type: 'goal',
+    type: 'project',
     href: item.href,
     id: item.id,
     title: item.title,
@@ -145,12 +149,17 @@ function evaluateProjectPage(item: any): any {
 
 async function taskPageType(page: puppeteer.Page): Promise<string | null> {
   const taskNoteSelector = 'div.task-view.ng-scope > ul > li.note > div';
+
   const goalSelector = '#goal_info';
   const projectSelector = '#project_info';
 
+  const taskTitleSelector = 'div.task-view.ng-scope > h3 > span.title.ng-binding';
+  const goalTitleSelector = '#goal_info > h3 > span.title.ng-binding';
+  const projectTitleSelector = '#project_info > h3 > span.title.ng-binding';
+
   try {
     // Wait for the task note element to load
-    // For goal/poject, wait timeout
+    // For goal/poject, it will timeout
     await page.waitForSelector(taskNoteSelector, {
       timeout: 5000
     });
@@ -160,14 +169,23 @@ async function taskPageType(page: puppeteer.Page): Promise<string | null> {
   let projectElement: puppeteer.ElementHandle<Element> | null = await page.$(projectSelector);
 
   if (goalElement === null || projectElement === null) {
+    // Wait for the task title content to load, which means the page content is fully loaded
+    await page.waitForFunction(evaluateTextNonEmpty, {}, taskTitleSelector);
+
     return 'task';
   } else {
     let goalClass: string = await page.evaluate(evaluateClassAttribute, goalSelector);
     let projectClass: string = await page.evaluate(evaluateClassAttribute, projectSelector);
 
     if (goalClass.indexOf('hide') === -1) {
+      // Wait for the goal title content to load
+      await page.waitForFunction(evaluateTextNonEmpty, {}, goalTitleSelector);
+
       return 'goal';
     } else if (projectClass.indexOf('hide') === -1) {
+      // Wait for the project title content to load
+      await page.waitForFunction(evaluateTextNonEmpty, {}, projectTitleSelector);
+
       return 'project';
     }
   }
