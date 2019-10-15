@@ -95,6 +95,7 @@ async function run(startDate: Date, endDate: Date): Promise<any> {
   const browser = await puppeteer.launch({
     headless: !argv.debug,
     // ignoreHTTPSErrors: true,
+    // devtools: true,
   });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(120000);
