@@ -21,6 +21,9 @@ let argv = yargs.option('debug', {
 }).option('password', {
   alias: 'p',
   default: 'password'
+}).option('help', {
+  alias: 'h',
+  default: false
 }).argv;
 
 import fs from 'fs';
@@ -122,6 +125,11 @@ async function run(startDate: Date, endDate: Date): Promise<any> {
     await page.close();
     browser.close();
   }
+}
+
+if (argv.help) {
+  yargs.showHelp();
+  process.exit(0);
 }
 
 // From start date to today; doit.im uses Beijing time
