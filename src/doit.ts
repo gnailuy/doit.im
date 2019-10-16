@@ -1,6 +1,14 @@
+import fs from 'fs';
+import moment from 'moment';
+import puppeteer from 'puppeteer';
 import yargs from 'yargs'
 
-let argv = yargs.option('debug', {
+import login from './login';
+import * as review from './review';
+import * as task from './task';
+import * as utils from './utils';
+
+let argv: yargs.Arguments = yargs.option('debug', {
   alias: 'd',
   default: false
 }).option('task', {
@@ -25,15 +33,6 @@ let argv = yargs.option('debug', {
   alias: 'h',
   default: false
 }).argv;
-
-import fs from 'fs';
-import puppeteer from 'puppeteer';
-import moment from 'moment';
-
-import login from './login';
-import * as review from './review';
-import * as task from './task';
-import * as utils from './utils';
 
 async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
   let taskList: Array<any> = [];
@@ -134,7 +133,10 @@ if (argv.help) {
 }
 
 // From start date to today; doit.im uses Beijing time
-run(new Date(Date.parse(argv.start + 'T00:00:00+08:00')), new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'))).catch((e) => {
+run(
+  new Date(Date.parse(argv.start + 'T00:00:00+08:00')),
+  new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'))
+  ).catch((e) => {
   console.log(e);
   process.exit(-1);
 });
