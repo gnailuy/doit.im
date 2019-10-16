@@ -8,7 +8,7 @@ import * as review from './review';
 import * as task from './task';
 import * as utils from './utils';
 
-let argv: yargs.Arguments = yargs.option('debug', {
+let argv = yargs.option('debug', {
   alias: 'd',
   default: false
 }).option('task', {
