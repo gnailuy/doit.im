@@ -128,22 +128,36 @@ function evaluateTaskPage(item: any): any {
 }
 
 function evaluateGoalPage(item: any): any {
+  const titleSelector = '#goal_info > h3 > span.title.ng-binding';
+  const noteSelector = '#goal_info > ul > li.note > span';
+
   return {
     type: 'goal',
     href: item.href,
     id: item.id,
     title: item.title,
-    // TODO: evaluate
+    title_inner: (document.querySelector(titleSelector) as HTMLElement).innerText,
+    note: (document.querySelector(noteSelector) as HTMLElement).innerHTML,
   };
 }
 
 function evaluateProjectPage(item: any): any {
+  const titleSelector = '#project_info > h3 > span.title.ng-binding';
+  const noteSelector = '#project_info > ul > li.note > span';
+  const timeSelector = '#project_info > div > div.item.time.ng-binding';
+  const contextSelector = '#project_info > div > div.item.context.ng-binding';
+  const goalSelector = '#project_info > div > div.item.goal.ng-binding'
+
   return {
     type: 'project',
     href: item.href,
     id: item.id,
     title: item.title,
-    // TODO: evaluate
+    title_inner: (document.querySelector(titleSelector) as HTMLElement).innerText,
+    note: (document.querySelector(noteSelector) as HTMLElement).innerHTML,
+    time: (document.querySelector(timeSelector) as HTMLElement).innerText,
+    context: (document.querySelector(contextSelector) as HTMLElement).innerText,
+    goal: (document.querySelector(goalSelector) as HTMLElement).innerText,
   };
 }
 
