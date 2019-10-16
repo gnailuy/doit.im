@@ -84,6 +84,9 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date)
   for (let d: Date = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     console.log(moment(d).format('YYYYMMDD'));
     // Save the daily review of the day
+
+    // Count stars
+    // document.querySelectorAll('#review_daily > div > div.review-daily > div > div.review-result > div.scores > div > div.star.star-2').length
   }
 
   return reviews;
