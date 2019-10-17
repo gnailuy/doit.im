@@ -7,21 +7,39 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Launch Task Command",
             "program": "${workspaceFolder}/src/doit.ts",
             "preLaunchTask": "npm: compile",
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "args": [
+                "task",
                 "-d",
                 "true",
                 "-u",
                 "username@example.com",
                 "-p",
                 "password",
-                "-t", // or "-r" to crawl daily reviews
-                "true",
                 "-s",
-                "2014-10-01"
+                "2019-08-01"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Review Command",
+            "program": "${workspaceFolder}/src/doit.ts",
+            "preLaunchTask": "npm: compile",
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "args": [
+                "review",
+                "-d",
+                "true",
+                "-u",
+                "username@example.com",
+                "-p",
+                "password",
+                "-s",
+                "2019-10-12"
             ]
         }
     ]

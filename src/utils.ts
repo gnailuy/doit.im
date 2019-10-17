@@ -12,7 +12,7 @@ export async function createNewPage(browser: puppeteer.Browser): Promise<puppete
   // Create new page and set window size
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(120000);
-  page.setViewport({
+  await page.setViewport({
     width: 1200,
     height: 800,
   });

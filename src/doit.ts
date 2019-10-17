@@ -8,33 +8,7 @@ import * as review from './review';
 import * as task from './task';
 import * as utils from './utils';
 
-let argv = yargs.option('debug', {
-  alias: 'd',
-  default: false,
-}).option('task', {
-  alias: 't',
-  default: false,
-}).option('review', {
-  alias: 'r',
-  default: false,
-}).option('start', {
-  alias: 's',
-  default: '2014-01-01',
-}).option('output', {
-  alias: 'o',
-  default: './output',
-}).option('username', {
-  alias: 'u',
-  default: 'username@example.com',
-}).option('password', {
-  alias: 'p',
-  default: 'password',
-}).option('help', {
-  alias: 'h',
-  default: false,
-}).argv;
-
-async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
+async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date, prefix: string): Promise<Array<any>> {
   let taskList: Array<any> = [];
   let taskDetailList: Array<any> = [];
 
@@ -51,7 +25,7 @@ async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): 
 
   let logger: fs.WriteStream | undefined = undefined;
   try {
-    logger = fs.createWriteStream(argv.output + '.tasks.json', {
+    logger = fs.createWriteStream(prefix + '.tasks.json', {
       flags: 'a', // appending
     })
 
@@ -77,12 +51,12 @@ async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): 
   return taskDetailList;
 }
 
-async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
+async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date, prefix: string): Promise<Array<any>> {
   let reviewDetailList: Array<any> = [];
 
   let logger: fs.WriteStream | undefined = undefined;
   try {
-    logger = fs.createWriteStream(argv.output + '.reviews.json', {
+    logger = fs.createWriteStream(prefix + '.reviews.json', {
       flags: 'a', // appending
     })
 
@@ -112,7 +86,11 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date)
   return reviewDetailList;
 }
 
-async function run(startDate: Date, endDate: Date): Promise<any> {
+async function run(argv: any, isTask: boolean = true): Promise<any> {
+  // From start date to today; doit.im uses Beijing time
+  let startDate: Date = new Date(Date.parse(argv.start + 'T00:00:00+08:00'));
+  let endDate: Date = new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'));
+
   // Init browser and page
   let browser: puppeteer.Browser = await utils.launchBrowser(argv.debug);
   let page: puppeteer.Page = await utils.createNewPage(browser);
@@ -122,17 +100,15 @@ async function run(startDate: Date, endDate: Date): Promise<any> {
 
   // Crawl and save data
   try {
-    if (argv.task) {
+    if (isTask) {
       console.log('Crawling tasks ...');
-      let tasks: Array<any> = await saveTasks(page, startDate, endDate);
+      let tasks: Array<any> = await saveTasks(page, startDate, endDate, argv.output);
       console.log('Tasks finished: ' + tasks.length);
-    }
-    if (argv.review) {
+    } else {
       console.log('Crawling reviews ...');
-      let reviews: Array<any> = await saveReviews(page, startDate, endDate);
+      let reviews: Array<any> = await saveReviews(page, startDate, endDate, argv.output);
       console.log('Reviews finished: ' + reviews.length);
     }
-    console.log('All done.');
   } catch (e) {
     console.log(e);
   } finally {
@@ -141,16 +117,35 @@ async function run(startDate: Date, endDate: Date): Promise<any> {
   }
 }
 
-if (argv.help) {
-  yargs.showHelp();
-  process.exit(0);
-}
-
-// From start date to today; doit.im uses Beijing time
-run(
-  new Date(Date.parse(argv.start + 'T00:00:00+08:00')),
-  new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'))
-  ).catch((e) => {
-  console.log(e);
-  process.exit(-1);
-});
+yargs.showHelpOnFail(true).demandCommand()
+.command('task', 'Crawl the tasks archive page', () => {}, async function(argv: any) {
+  await run(argv, true);
+}).command('review', 'Crawl the daily review page', () => {}, async function(argv: any) {
+  await run(argv, false);
+}).option('debug', {
+  alias: 'd',
+  default: false,
+  describe: 'Disable headless mode to debug',
+  global: true,
+}).option('start', {
+  alias: 's',
+  default: '2014-01-01',
+  describe: 'Crawl backwards from today to this date (YYYY-MM-DD)',
+  global: true,
+}).option('output', {
+  alias: 'o',
+  default: './output',
+  describe: 'Prefix of the output file',
+  global: true,
+}).option('username', {
+  alias: 'u',
+  demandOption: true,
+  describe: 'Your email to login to doit.im',
+  global: true,
+}).option('password', {
+  alias: 'p',
+  demandOption: true,
+  describe: 'Your secret password',
+  global: true,
+}).help('help').alias('help', 'h').alias('version', 'v')
+.argv;
