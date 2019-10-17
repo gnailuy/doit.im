@@ -92,7 +92,7 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date)
       let dStr: string = moment(d).format('YYYYMMDD');
       console.log('Crawling daily review of date: ' + dStr);
 
-      let reviewDetail: any = await review.crawlReviewPage(page);
+      let reviewDetail: any = await review.crawlReviewPage(page, dStr);
       if (reviewDetail !== null) {
         reviewDetailList.push(reviewDetail);
         logger.write(JSON.stringify(reviewDetail, null, 0) + '\n');
@@ -116,7 +116,6 @@ async function run(startDate: Date, endDate: Date): Promise<any> {
   // Open browser and set window size
   const browser = await puppeteer.launch({
     headless: !argv.debug,
-    // ignoreHTTPSErrors: true,
     // devtools: true,
   });
   const page = await browser.newPage();

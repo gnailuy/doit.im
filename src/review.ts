@@ -1,7 +1,5 @@
 import puppeteer from 'puppeteer';
 
-import * as utils from "./utils";
-
 export async function loadReviewPage(page: puppeteer.Page, dateStr: string): Promise<puppeteer.Page> {
   // URL
   const reviewURL = 'https://i.doit.im/home/#/review/daily/' + dateStr + '/view';
@@ -18,36 +16,35 @@ export async function goToPreviousDay(page: puppeteer.Page): Promise<puppeteer.P
   // Click the Prev arrow
   await page.click('#review_daily > div > div.review-title > div.inner > div > div.prev-day');
 
-  // Load the whole page
-  await utils.loadWholePage(page);
-
   return page;
 }
 
 function isReviewResponse(response: puppeteer.Response): boolean {
   // URL Example: https://i.doit.im/review/daily/20191012?_=1571305092610
-  let reviewRegex: RegExp = /https:\/\/i.doit.im\/review\/daily\/[0-9]{8}?_=[0-9]*/g
+  const reviewRegex: RegExp = /https:\/\/i.doit.im\/review\/daily\/[0-9]{8}\?_=[0-9]*/g
   return reviewRegex.test(response.url()) && response.status() === 200;
 }
 
-function evaluateReviewPage(review: any): any {
+function evaluateReviewPage(dateStr: string, review: any): any {
   const starsSelector = '#review_daily > div > div.review-daily > div > div.review-result > div.scores > div > div.star.star-2';
 
-  if (!review || 'notes' !in review) {
+  if (review && 'notes' in review) {
     return {
+      date: dateStr,
+      created: review.created,
+      updated: review.updated,
       stars: document.querySelectorAll(starsSelector).length,
+      notes: review.notes,
     };
   } else {
     return {
+      date: dateStr,
       stars: document.querySelectorAll(starsSelector).length,
-      notes: review.notes,
-      created: review.created,
-      updated: review.updated,
     };
   }
 }
 
-export async function crawlReviewPage(page: puppeteer.Page): Promise<any> {
+export async function crawlReviewPage(page: puppeteer.Page, dataStr: string): Promise<any> {
   // Wait for the review response to return
   let review: any = undefined;
   try {
@@ -57,5 +54,5 @@ export async function crawlReviewPage(page: puppeteer.Page): Promise<any> {
     review = await reviewResponse.json();
   } catch (_) { }
 
-  return await page.evaluate(evaluateReviewPage, review);
+  return await page.evaluate(evaluateReviewPage, dataStr, review);
 }
