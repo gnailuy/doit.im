@@ -78,18 +78,36 @@ async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): 
 }
 
 async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
-  let reviews: Array<any> = [];
+  let reviewDetailList: Array<any> = [];
 
-  // Foreach day between start and end
-  for (let d: Date = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    console.log(moment(d).format('YYYYMMDD'));
-    // Save the daily review of the day
+  let logger: fs.WriteStream | undefined = undefined;
+  try {
+    logger = fs.createWriteStream(argv.output + '.reviews.json', {
+      flags: 'a' // appending
+    })
 
-    // Count stars
-    // document.querySelectorAll('#review_daily > div > div.review-daily > div > div.review-result > div.scores > div > div.star.star-2').length
+    // Foreach day between start and end
+    for (let d: Date = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      let dStr: string = moment(d).format('YYYYMMDD');
+      console.log('Crawling daily review of date: ' + dStr);
+
+      let reviewDetail: any = await review.crawlReview(page, dStr);
+      if (reviewDetail !== null) {
+        reviewDetailList.push(reviewDetail);
+        logger.write(JSON.stringify(reviewDetailList, null, 0) + '\n');
+      } else {
+        console.log('Daily review of date ' + dStr + ' is unknown');
+      }
+
+      await utils.sleep(utils.randomNumber(1000, 2000));
+    }
+  } finally {
+    if (logger) {
+      logger.end();
+    }
   }
 
-  return reviews;
+  return reviewDetailList;
 }
 
 async function run(startDate: Date, endDate: Date): Promise<any> {
