@@ -87,19 +87,21 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date)
     })
 
     // Foreach day between start and end
-    for (let d: Date = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    page = await review.loadReviewPage(page, moment(endDate).format('YYYYMMDD'));
+    for (let d: Date = new Date(endDate); d >= startDate; d.setDate(d.getDate() - 1)) {
       let dStr: string = moment(d).format('YYYYMMDD');
       console.log('Crawling daily review of date: ' + dStr);
 
-      let reviewDetail: any = await review.crawlReview(page, dStr);
+      let reviewDetail: any = await review.crawlReviewPage(page);
       if (reviewDetail !== null) {
         reviewDetailList.push(reviewDetail);
-        logger.write(JSON.stringify(reviewDetailList, null, 0) + '\n');
+        logger.write(JSON.stringify(reviewDetail, null, 0) + '\n');
       } else {
         console.log('Daily review of date ' + dStr + ' is unknown');
       }
 
       await utils.sleep(utils.randomNumber(1000, 2000));
+      await review.goToPreviousDay(page);
     }
   } finally {
     if (logger) {

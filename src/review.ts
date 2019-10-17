@@ -1,6 +1,8 @@
 import puppeteer from 'puppeteer';
 
-async function loadReviewPage(page: puppeteer.Page, dateStr: string): Promise<puppeteer.Page> {
+import * as utils from "./utils";
+
+export async function loadReviewPage(page: puppeteer.Page, dateStr: string): Promise<puppeteer.Page> {
   // URL
   const reviewURL = 'https://i.doit.im/home/#/review/daily/' + dateStr + '/view';
 
@@ -12,8 +14,20 @@ async function loadReviewPage(page: puppeteer.Page, dateStr: string): Promise<pu
   return page;
 }
 
+export async function goToPreviousDay(page: puppeteer.Page): Promise<puppeteer.Page> {
+  // Click the Prev arrow
+  await page.click('#review_daily > div > div.review-title > div.inner > div > div.prev-day');
+
+  // Load the whole page
+  await utils.loadWholePage(page);
+
+  return page;
+}
+
 function isReviewResponse(response: puppeteer.Response): boolean {
-  return response.url().startsWith('https://i.doit.im/review/daily/20191013') && response.status() === 200
+  // URL Example: https://i.doit.im/review/daily/20191012?_=1571305092610
+  let reviewRegex: RegExp = /https:\/\/i.doit.im\/review\/daily\/[0-9]{8}?_=[0-9]*/g
+  return reviewRegex.test(response.url()) && response.status() === 200;
 }
 
 function evaluateReviewPage(review: any): any {
@@ -33,7 +47,7 @@ function evaluateReviewPage(review: any): any {
   }
 }
 
-async function crawlReviewPage(page: puppeteer.Page): Promise<any> {
+export async function crawlReviewPage(page: puppeteer.Page): Promise<any> {
   // Wait for the review response to return
   let review: any = undefined;
   try {
@@ -44,9 +58,4 @@ async function crawlReviewPage(page: puppeteer.Page): Promise<any> {
   } catch (_) { }
 
   return await page.evaluate(evaluateReviewPage, review);
-}
-
-export async function crawlReview(page: puppeteer.Page, dateStr: string): Promise<any> {
-  return await crawlReviewPage(
-    await loadReviewPage(page, dateStr));
 }
