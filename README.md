@@ -23,16 +23,23 @@ npm run compile
 ### Run the crawler
 
 1. You can use `node dist/doit.js` to replace the `npm run start --` command;
-2. Set `-d` to `false` to launch Chromium headless;
-3. Crawler will stop on the date specified by `-s`;
+2. Set `--debug` to `false` to launch Chromium headless;
+3. Crawler goes backwards from today and stops on the date specified by `--start`;
 
 ``` bash
 # Show help
-npm run start -- -h
+npm run start
+# or
+npm run start -- --help
 
-# Run the crawler
-npm run start -- -d true -t true -r true -u "username@example.com" -p "password" -s "2014-10-01"
+# Crawl tasks archive page
+npm run start -- task --debug true --username "username@example.com" --password "password" --start "2014-10-01"
+
+# Crawl daily review page
+npm run start -- review --debug true --username "username@example.com" --password "password" --start "2014-10-01"
 ```
 
 To debug the code, copy `launch.json.sample` in `.vscode` to `launch.json`, provide your username and password in it.
 Then you are ready to debug the code in Visual Studio Code.
+
+There are two default debug configurations to choose: `Launch Task Command` and `Launch Review Command`.
