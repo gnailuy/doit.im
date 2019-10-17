@@ -167,6 +167,7 @@ async function taskPageType(page: puppeteer.Page): Promise<string | null> {
   const goalSelector = '#goal_info';
   const projectSelector = '#project_info';
 
+  const taskTitleSelector = 'div.task-view.ng-scope > h3 > span.title.ng-binding';
   const taskCommentSelector = 'div.task-view.ng-scope > ul > li.comments.animate-list.ng-scope > div.title.ng-binding';
   const goalTitleSelector = '#goal_info > h3 > span.title.ng-binding';
   const projectTitleSelector = '#project_info > h3 > span.title.ng-binding';
@@ -183,7 +184,10 @@ async function taskPageType(page: puppeteer.Page): Promise<string | null> {
   let projectElement: puppeteer.ElementHandle<Element> | null = await page.$(projectSelector);
 
   if (goalElement === null || projectElement === null) {
-    // Wait for the task comment to load, which means the page content is fully loaded
+    // Wait for the task title content to load
+    await page.waitForFunction(evaluateTextNonEmpty, {}, taskTitleSelector);
+
+    // Wait for the task comment to load
     await page.waitForSelector(taskCommentSelector, {
       timeout: 5000,
     });
