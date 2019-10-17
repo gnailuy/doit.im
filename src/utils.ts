@@ -1,5 +1,25 @@
 import puppeteer from 'puppeteer'
 
+export async function launchBrowser(debug: boolean = false, devtools: boolean = false): Promise<puppeteer.Browser> {
+  // Open browser
+  return await puppeteer.launch({
+    headless: !debug,
+    devtools: devtools,
+  });
+}
+
+export async function createNewPage(browser: puppeteer.Browser): Promise<puppeteer.Page> {
+  // Create new page and set window size
+  const page = await browser.newPage();
+  page.setDefaultNavigationTimeout(120000);
+  page.setViewport({
+    width: 1200,
+    height: 800,
+  });
+
+  return page;
+}
+
 // Scroll down to load the whole page
 export async function loadWholePage(page: puppeteer.Page): Promise<any> {
   await page.evaluate(() => {
@@ -26,6 +46,6 @@ export function randomNumber(start: number = 0, end: number = 10): number {
 
 export function sleep(ms: number): Promise<any> {
   return new Promise(resolve => {
-    setTimeout(resolve, ms)
+    setTimeout(resolve, ms);
   })
 }

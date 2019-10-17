@@ -6,7 +6,7 @@ export default async function login(page: puppeteer.Page, user: string, pass: st
 
   // Open page
   await page.goto(loginURL, {
-    waitUntil: 'load'
+    waitUntil: 'load',
   });
 
   // Fill user and pass, click remember me
@@ -17,7 +17,7 @@ export default async function login(page: puppeteer.Page, user: string, pass: st
   // Click submit and wait for redirection
   await page.click('div[class="submit_btn_box"]');
   await page.waitForNavigation({
-    'waitUntil': 'load'
+    waitUntil: 'load',
   });
 
   return page;

@@ -6,7 +6,7 @@ export async function loadReviewPage(page: puppeteer.Page, dateStr: string): Pro
 
   // Open page
   await page.goto(reviewURL, {
-    waitUntil: 'load'
+    waitUntil: 'load',
   });
 
   return page;
@@ -21,7 +21,7 @@ export async function goToPreviousDay(page: puppeteer.Page): Promise<puppeteer.P
 
 function isReviewResponse(response: puppeteer.Response): boolean {
   // URL Example: https://i.doit.im/review/daily/20191012?_=1571305092610
-  const reviewRegex: RegExp = /https:\/\/i.doit.im\/review\/daily\/[0-9]{8}\?_=[0-9]*/g
+  const reviewRegex: RegExp = /https:\/\/i.doit.im\/review\/daily\/[0-9]{8}\?_=[0-9]*/g;
   return reviewRegex.test(response.url()) && response.status() === 200;
 }
 
@@ -49,7 +49,7 @@ export async function crawlReviewPage(page: puppeteer.Page, dataStr: string): Pr
   let review: any = undefined;
   try {
     let reviewResponse: puppeteer.Response = await page.waitForResponse(isReviewResponse, {
-      timeout: 5000
+      timeout: 5000,
     });
     review = await reviewResponse.json();
   } catch (_) { }

@@ -8,7 +8,7 @@ export async function loadTaskListPage(page: puppeteer.Page, monthTs: number): P
 
   // Open page
   await page.goto(taskListURL, {
-    waitUntil: 'load'
+    waitUntil: 'load',
   });
 
   // Load the whole page
@@ -52,7 +52,7 @@ export async function crawlTaskList(page: puppeteer.Page): Promise<Array<any>> {
 async function loadTaskPage(page: puppeteer.Page, taskItem: any): Promise<puppeteer.Page> {
   // Open page
   await page.goto(taskItem.href, {
-    waitUntil: 'load'
+    waitUntil: 'load',
   });
 
   return page;
@@ -79,8 +79,8 @@ function evaluateTaskPage(item: any): any {
   const commentsSelector = 'div.task-view.ng-scope > ul > li.comments.animate-list.ng-scope > div.con > ul > li';
   const estimateHourSelector = '#task_paper > div.task-estimate.ng-scope > div.estimate > div.time-wrap > input.h';
   const estimateMinuteSelector = '#task_paper > div.task-estimate.ng-scope > div.estimate > div.time-wrap > input.m';
-  const spentHourSelector = '#task_paper > div.task-estimate.ng-scope > div.spent > div.time-wrap > input.h'
-  const spentMinuteSelector = '#task_paper > div.task-estimate.ng-scope > div.spent > div.time-wrap > input.m'
+  const spentHourSelector = '#task_paper > div.task-estimate.ng-scope > div.spent > div.time-wrap > input.h';
+  const spentMinuteSelector = '#task_paper > div.task-estimate.ng-scope > div.spent > div.time-wrap > input.m';
 
   const subtaskTitleSelector = 'div.title > span';
   let subtaskElements: Array<Element> = [...document.querySelectorAll(subtasksSelector)];
@@ -146,7 +146,7 @@ function evaluateProjectPage(item: any): any {
   const noteSelector = '#project_info > ul > li.note > span';
   const timeSelector = '#project_info > div > div.item.time.ng-binding';
   const contextSelector = '#project_info > div > div.item.context.ng-binding';
-  const goalSelector = '#project_info > div > div.item.goal.ng-binding'
+  const goalSelector = '#project_info > div > div.item.goal.ng-binding';
 
   return {
     type: 'project',
@@ -175,7 +175,7 @@ async function taskPageType(page: puppeteer.Page): Promise<string | null> {
     // Wait for the task note element to load
     // For goal/poject, it will timeout
     await page.waitForSelector(taskNoteSelector, {
-      timeout: 5000
+      timeout: 5000,
     });
   } catch (_) { }
 

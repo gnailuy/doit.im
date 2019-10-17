@@ -10,28 +10,28 @@ import * as utils from './utils';
 
 let argv = yargs.option('debug', {
   alias: 'd',
-  default: false
+  default: false,
 }).option('task', {
   alias: 't',
-  default: false
+  default: false,
 }).option('review', {
   alias: 'r',
-  default: false
+  default: false,
 }).option('start', {
   alias: 's',
-  default: '2014-01-01'
+  default: '2014-01-01',
 }).option('output', {
   alias: 'o',
-  default: './output'
+  default: './output',
 }).option('username', {
   alias: 'u',
-  default: 'username@example.com'
+  default: 'username@example.com',
 }).option('password', {
   alias: 'p',
-  default: 'password'
+  default: 'password',
 }).option('help', {
   alias: 'h',
-  default: false
+  default: false,
 }).argv;
 
 async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): Promise<Array<any>> {
@@ -52,7 +52,7 @@ async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date): 
   let logger: fs.WriteStream | undefined = undefined;
   try {
     logger = fs.createWriteStream(argv.output + '.tasks.json', {
-      flags: 'a' // appending
+      flags: 'a', // appending
     })
 
     for (let t of taskList) {
@@ -83,7 +83,7 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date)
   let logger: fs.WriteStream | undefined = undefined;
   try {
     logger = fs.createWriteStream(argv.output + '.reviews.json', {
-      flags: 'a' // appending
+      flags: 'a', // appending
     })
 
     // Foreach day between start and end
@@ -113,20 +113,12 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date)
 }
 
 async function run(startDate: Date, endDate: Date): Promise<any> {
-  // Open browser and set window size
-  const browser = await puppeteer.launch({
-    headless: !argv.debug,
-    // devtools: true,
-  });
-  const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(120000);
-  page.setViewport({
-    width: 1200,
-    height: 800
-  });
+  // Init browser and page
+  let browser: puppeteer.Browser = await utils.launchBrowser(argv.debug);
+  let page: puppeteer.Page = await utils.createNewPage(browser);
 
   // Login
-  await login(page, argv.username, argv.password)
+  await login(page, argv.username, argv.password);
 
   // Crawl and save data
   try {
