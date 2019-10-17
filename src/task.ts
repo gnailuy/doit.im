@@ -95,7 +95,7 @@ function evaluateTaskPage(item: any): any {
   let comments = commentElements.map((el: Element) => {
     return {
       author: (el.querySelector(commentAuthorSelector) as HTMLElement).innerText,
-      time: (el.querySelector(commentTimeSelector) as HTMLElement).innerText,
+      time: (el.querySelector(commentTimeSelector) as HTMLElement).getAttribute('title'),
       content: (el.querySelector(commentContentSelector) as HTMLElement).innerText,
     };
   });
@@ -168,7 +168,7 @@ async function taskPageType(page: puppeteer.Page): Promise<string | null> {
   const projectSelector = '#project_info';
 
   const taskTitleSelector = 'div.task-view.ng-scope > h3 > span.title.ng-binding';
-  const taskCommentSelector = 'div.task-view.ng-scope > ul > li.comments.animate-list.ng-scope > div.title.ng-binding';
+  const taskCommentLoadedSelector = 'div.task-view.ng-scope > ul > li.comments.animate-list.ng-scope > div.con > div.loading.ng-hide';
   const goalTitleSelector = '#goal_info > h3 > span.title.ng-binding';
   const projectTitleSelector = '#project_info > h3 > span.title.ng-binding';
 
@@ -188,7 +188,7 @@ async function taskPageType(page: puppeteer.Page): Promise<string | null> {
     await page.waitForFunction(evaluateTextNonEmpty, {}, taskTitleSelector);
 
     // Wait for the task comment to load
-    await page.waitForSelector(taskCommentSelector, {
+    await page.waitForSelector(taskCommentLoadedSelector, {
       timeout: 5000,
     });
 
