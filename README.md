@@ -1,5 +1,7 @@
 # Doit.im Crawler
 
+Export your [doit.im](http://doit.im/) tasks and daily reviews to local JSON files.
+
 ## Prerequisites
 
 1. [node.js](https://nodejs.org/en/)
@@ -7,17 +9,14 @@
 
 ## Build, run, and debug
 
-F**k the GFW first, or `npm` might not be able to download Chromium
-
 ### Build the code
 
 ``` bash
 # Install packages
-npm i
+npm install
 
 # Build
 npm run compile
-
 ```
 
 ### Run the crawler
@@ -39,7 +38,11 @@ npm run start -- task --debug true --username "username@example.com" --password 
 npm run start -- review --debug true --username "username@example.com" --password "password" --start "2014-10-01"
 ```
 
+### Debug the code
+
 To debug the code, copy `launch.json.sample` in `.vscode` to `launch.json`, provide your username and password in it.
 Then you are ready to debug the code in Visual Studio Code.
 
 There are two default debug configurations to choose: `Launch Task Command` and `Launch Review Command`.
+
+**DO NOT** commit `launch.json` to a public repository if it contains your password.
