@@ -26,6 +26,23 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch Someday Command",
+            "program": "${workspaceFolder}/src/doit.ts",
+            "preLaunchTask": "npm: compile",
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "args": [
+                "someday",
+                "-d",
+                "true",
+                "-u",
+                "username@example.com",
+                "-p",
+                "password"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch Review Command",
             "program": "${workspaceFolder}/src/doit.ts",
             "preLaunchTask": "npm: compile",

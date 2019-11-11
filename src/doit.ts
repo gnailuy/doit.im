@@ -51,6 +51,42 @@ async function saveTasks(page: puppeteer.Page, startDate: Date, endDate: Date, p
   return taskDetailList;
 }
 
+async function saveSomeday(page: puppeteer.Page, prefix: string): Promise<Array<any>> {
+  let taskDetailList: Array<any> = [];
+
+  page = await task.loadSomedayPage(page);
+  console.log('Crawling tasks from someday box');
+  let taskList: Array<any> = await task.crawlTaskList(page);
+  await utils.sleep(utils.randomNumber(1000, 2000));
+
+  let logger: fs.WriteStream | undefined = undefined;
+  try {
+    logger = fs.createWriteStream(prefix + '.someday.json', {
+      flags: 'a', // appending
+    })
+
+    for (let t of taskList) {
+      console.log('Crawling task: ' + t.id);
+
+      let taskDetail: any = await task.crawlTask(page, t);
+      if (taskDetail !== null) {
+        taskDetailList.push(taskDetail);
+        logger.write(JSON.stringify(taskDetail, null, 0) + '\n');
+      } else {
+        console.log('Task ' + t.id + ' is of unknown type');
+      }
+
+      await utils.sleep(utils.randomNumber(1000, 2000));
+    }
+  } finally {
+    if (logger) {
+      logger.end();
+    }
+  }
+
+  return taskDetailList;
+}
+
 async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date, prefix: string): Promise<Array<any>> {
   let reviewDetailList: Array<any> = [];
 
@@ -86,7 +122,7 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date,
   return reviewDetailList;
 }
 
-async function run(argv: any, isTask: boolean = true): Promise<any> {
+async function run(argv: any, type: string = 'task'): Promise<any> {
   // From start date to today; doit.im uses Beijing time
   let startDate: Date = new Date(Date.parse(argv.start + 'T00:00:00+08:00'));
   let endDate: Date = new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'));
@@ -100,14 +136,22 @@ async function run(argv: any, isTask: boolean = true): Promise<any> {
 
   // Crawl and save data
   try {
-    if (isTask) {
-      console.log('Crawling tasks ...');
-      let tasks: Array<any> = await saveTasks(page, startDate, endDate, argv.output);
-      console.log('Tasks finished: ' + tasks.length);
-    } else {
-      console.log('Crawling reviews ...');
-      let reviews: Array<any> = await saveReviews(page, startDate, endDate, argv.output);
-      console.log('Reviews finished: ' + reviews.length);
+    switch (type) {
+      case 'task': {
+        console.log('Crawling tasks ...');
+        let tasks: Array<any> = await saveTasks(page, startDate, endDate, argv.output);
+        console.log('Tasks finished: ' + tasks.length);
+      }
+      case 'someday': {
+        console.log('Crawling someday box ...');
+        let tasks: Array<any> = await saveSomeday(page, argv.output);
+        console.log('Someday box finished: ' + tasks.length);
+      }
+      case 'review': {
+        console.log('Crawling reviews ...');
+        let reviews: Array<any> = await saveReviews(page, startDate, endDate, argv.output);
+        console.log('Reviews finished: ' + reviews.length);
+      }
     }
   } catch (e) {
     console.log(e);
@@ -119,9 +163,11 @@ async function run(argv: any, isTask: boolean = true): Promise<any> {
 
 yargs.showHelpOnFail(true).demandCommand()
 .command('task', 'Crawl the tasks archive page', () => {}, async function(argv: any) {
-  await run(argv, true);
+  await run(argv, 'task');
+}).command('someday', 'Crawl the someday page', () => {}, async function(argv: any) {
+  await run(argv, 'someday');
 }).command('review', 'Crawl the daily review page', () => {}, async function(argv: any) {
-  await run(argv, false);
+  await run(argv, 'review');
 }).option('debug', {
   alias: 'd',
   default: false,

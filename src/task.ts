@@ -27,6 +27,21 @@ export async function goToPreviousMonth(page: puppeteer.Page): Promise<puppeteer
   return page;
 }
 
+export async function loadSomedayPage(page: puppeteer.Page): Promise<puppeteer.Page> {
+  // URL
+  const somedayURL = 'https://i.doit.im/home/#/someday'
+
+  // Open page
+  await page.goto(somedayURL, {
+    waitUntil: 'load',
+  });
+
+  // Load the whole page
+  await utils.loadWholePage(page);
+
+  return page;
+}
+
 export async function crawlTaskList(page: puppeteer.Page): Promise<Array<any>> {
   // Scrape the task list
   return await page.evaluate(() => {
