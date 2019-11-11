@@ -122,7 +122,7 @@ async function saveReviews(page: puppeteer.Page, startDate: Date, endDate: Date,
   return reviewDetailList;
 }
 
-async function run(argv: any, type: string = 'task'): Promise<any> {
+async function run(argv: any, cmd: string = 'task'): Promise<any> {
   // From start date to today; doit.im uses Beijing time
   let startDate: Date = new Date(Date.parse(argv.start + 'T00:00:00+08:00'));
   let endDate: Date = new Date(Date.parse(moment(new Date()).format('YYYY-MM-DD') + 'T00:00:00+08:00'));
@@ -136,21 +136,28 @@ async function run(argv: any, type: string = 'task'): Promise<any> {
 
   // Crawl and save data
   try {
-    switch (type) {
+    switch (cmd) {
       case 'task': {
         console.log('Crawling tasks ...');
         let tasks: Array<any> = await saveTasks(page, startDate, endDate, argv.output);
         console.log('Tasks finished: ' + tasks.length);
+        break;
       }
       case 'someday': {
         console.log('Crawling someday box ...');
         let tasks: Array<any> = await saveSomeday(page, argv.output);
         console.log('Someday box finished: ' + tasks.length);
+        break;
       }
       case 'review': {
         console.log('Crawling reviews ...');
         let reviews: Array<any> = await saveReviews(page, startDate, endDate, argv.output);
         console.log('Reviews finished: ' + reviews.length);
+        break;
+      }
+      default: {
+        console.log('Unknown command: ' + cmd);
+        break;
       }
     }
   } catch (e) {

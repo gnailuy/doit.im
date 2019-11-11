@@ -45,7 +45,7 @@ export async function loadSomedayPage(page: puppeteer.Page): Promise<puppeteer.P
 export async function crawlTaskList(page: puppeteer.Page): Promise<Array<any>> {
   // Scrape the task list
   return await page.evaluate(() => {
-    const taskListSelector = 'li.task.ng-scope.completed';
+    const taskListSelector = 'li.task.ng-scope';
     const taskSelector = 'a.link-title.ng-binding';
 
     // Save tasks into an array
